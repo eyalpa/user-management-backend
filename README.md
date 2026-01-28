@@ -25,6 +25,22 @@ Backend assignment for user/group management with MongoDB, Express, and TypeScri
    npm run dev
    ```
 
+## Docker Compose Example
+```bash
+docker compose up -d
+docker compose ps
+```
+
+## Environment Variables
+- `PORT`: HTTP port for the API server.
+- `MONGO_URI`: MongoDB connection string.
+
+Example:
+```
+PORT=3000
+MONGO_URI=mongodb://mongo:27017/user_management
+```
+
 ## Seed Data
 - CLI:
   ```bash
@@ -53,7 +69,31 @@ Base URL: `/api/v1`
 - Dev: colorized console logs
 - Prod (`NODE_ENV=production`): JSON logs with `message`, `severity`, `timestamp`, `traceID`, plus extra metadata.
 
+### Logs Pipeline (stdout → Vector → Logstash → Elastic)
+The app writes JSON logs to stdout in production. Vector (or any log collector) can read
+stdout from the container/host and forward to Logstash, which parses and ships to Elastic.
+
+Example flow:
+1. **App** logs JSON to stdout.
+2. **Vector** collects container logs and forwards to Logstash.
+3. **Logstash** parses JSON and sends to Elastic.
+
+
+## Design & Complexity Notes
+- Controllers are kept thin and delegate work to services. This keeps HTTP handling separate from data logic and makes testing simpler.
+- Service methods use **indexed queries** and **projections** to reduce MongoDB CPU and memory usage.
+- List endpoints avoid `countDocuments` and support **cursor pagination**, which scales better than deep offset scans.
+- Write operations that change state (e.g., remove user from group) run in a **transaction** to keep data consistent.
+- Group `memberCount` avoids full collection scans on every update, reducing write amplification under load.
+
 ## Pagination
 - Offset pagination supported via `limit/offset`.
 - Cursor pagination supported via `afterId` (preferred for large datasets).
 
+
+## Useful Files
+- Postman collection: `postman_collection.json`
+
+## Links
+- GitHub repo: https://github.com/eyalpa/user-management-backend
+- Swagger UI: http://localhost:3000/api/v1/docs
