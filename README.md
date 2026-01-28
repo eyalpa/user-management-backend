@@ -95,5 +95,4 @@ Example flow:
 - Postman collection: `postman_collection.json`
 
 ## Links
-- GitHub repo: https://github.com/eyalpa/user-management-backend
 - Swagger UI: http://localhost:3000/api/v1/docs
